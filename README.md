@@ -32,7 +32,7 @@ This script ties together the pose estimation and the image capturing process:
 - Python 3.x
 - OpenCV (`opencv-python`)
 - NumPy (`numpy`)
-- A network camera feed (e.g., IP webcam on your phone)
+- A network camera feed (e.g., IP webcam on your phone), you can install [IP Webcam](https://play.google.com/store/apps/details?id=com.pas.webcam&hl=en_US) on your Android smartphone
 
 You can install the required dependencies using:
 
