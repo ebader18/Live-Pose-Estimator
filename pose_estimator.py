@@ -1,10 +1,11 @@
 import numpy as np
 import cv2 as cv2
 
+
 # The rotation matrix R describes how to rotate coordinates from the coordinate system of img1 to align with the coordinate system of img2.
 # The translation vector t describes the position of the origin of the coordinate system of img2 in the coordinate system of img1.
 class pose_estimator:
-    def __init__(self, K, img_scale=1.0, max_feature = 10000, print_messages = False):
+    def __init__(self, K, img_scale=1.0, max_feature=10000, print_messages=False):
         self.img_scale = img_scale      # scale down resolution if too high
         self.max_feature = max_feature  # Limit the number of feature to match between images
         self.K = K
@@ -16,13 +17,13 @@ class pose_estimator:
         index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
         search_params = dict(checks=50)  # or pass empty dictionary
         self.flann = cv2.FlannBasedMatcher(index_params, search_params)
-    
+
     def compute_pose(self, img):
-        if self.kp2 == None:    # First call of function
+        if self.kp2 is None:    # First call of function
             self.kp2, self.desc2 = self.sift.detectAndCompute(img, None)
             self.img2 = img
             return False, None, None, None
-        
+
         self.img1 = self.img2
         self.img2 = img
         self.kp1, self.desc1 = self.kp2, self.desc2
@@ -30,7 +31,7 @@ class pose_estimator:
         if self.print_messages:
             print(f'{len(self.kp1)} features detected in image #1')
             print(f'{len(self.kp2)} features detected in image #2')
-        
+
         if len(self.desc1) == 0 or len(self.desc2) == 0:
             return False, None, None, None
         matches = self.flann.knnMatch(self.desc1[0:min(self.max_feature, len(self.desc1))], self.desc2[0:min(self.max_feature, len(self.desc2))], k=2)
@@ -38,7 +39,7 @@ class pose_estimator:
             print(f'{len(matches)} matches found before pruning')
         pts1, pts2 = [], []
         good_matches = []
-        for i,(m,n) in enumerate(matches):  # Ratio test as per Lowe's paper
+        for m, n in matches:  # Ratio test as per Lowe's paper
             if m.distance < 0.8*n.distance:
                 good_matches.append(m)
                 pts2.append(self.kp2[m.trainIdx].pt)

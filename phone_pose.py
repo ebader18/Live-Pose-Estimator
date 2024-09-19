@@ -1,31 +1,22 @@
+# source = 'http://10.0.0.44:8080/video'
+# f_x, f_y = 522.5802793786835, 522.7410914643813
+# c_x, c_y = 353.65300765751493, 224.41622041388987
+
 import cv2
 import numpy as np
 from pose_estimator import pose_estimator
 import time
 import threading
+import argparse
 
-
-source = 'http://10.0.0.44:8080/video'
-# source = 'http://192.168.137.195:8080/video'
-img1_path = '_images/0.png'
-img2_path = '_images/80.png'
-f_x, f_y = 522.5802793786835, 522.7410914643813
-c_x, c_y = 353.65300765751493, 224.41622041388987
-K = np.array([
-    [f_x, 0, c_x],
-    [0, f_y, c_y],
-    [0, 0, 1]
-])
 latest_image = None
 lock = threading.Lock()
 exit_flag = False
 
 
-def capture_image():
+def capture_image(source):
     global latest_image, lock, exit_flag
     cap = cv2.VideoCapture()
-    source = 'http://10.0.0.44:8080/video'
-    # source = 'http://192.168.137.195:8080/video'
     cap.open(source)
     while not exit_flag:
         ret, frame = cap.read()
@@ -40,7 +31,24 @@ def transform_to_global(R, t, point):
 
 
 if __name__ == '__main__':
-    capture_thread = threading.Thread(target=capture_image)
+    # Set up argparse
+    parser = argparse.ArgumentParser(description="Captures live images from phone and compute pose.")
+    parser.add_argument("ip", help="IP address for ip-camera or phone.")
+    parser.add_argument("intrinsic", nargs=4, type=float, help="Intrinsic parameters for camera in following order 'fx fy cx cy', e.g. '522.5 522.7 353.6 224.4'")
+    args = parser.parse_args()
+
+    source = 'http://' + f'{args.ip}' + ':8080/video'
+    f_x = args.intrinsic[0]
+    f_y = args.intrinsic[1]
+    c_x = args.intrinsic[2]
+    c_y = args.intrinsic[3]
+    K = np.array([
+        [f_x, 0, c_x],
+        [0, f_y, c_y],
+        [0, 0, 1]
+    ])
+
+    capture_thread = threading.Thread(target=capture_image, args=(source,))
     capture_thread.start()
 
     pose = pose_estimator(K, max_feature=10000)
