@@ -5,12 +5,13 @@ import cv2 as cv2
 # The rotation matrix R describes how to rotate coordinates from the coordinate system of img1 to align with the coordinate system of img2.
 # The translation vector t describes the position of the origin of the coordinate system of img2 in the coordinate system of img1.
 class pose_estimator:
-    def __init__(self, K, img_scale=1.0, max_feature=10000, print_messages=False):
+    def __init__(self, K, img_scale=1.0, max_feature=10000, print_messages=False, size_output_img=[800, 1000]):
         self.img_scale = img_scale      # scale down resolution if too high
         self.max_feature = max_feature  # Limit the number of feature to match between images
         self.K = K
         self.print_messages = print_messages
         self.kp1, self.desc1, self.kp2, self.desc2 = None, None, None, None
+        self.size_output_img = size_output_img
 
         self.sift = cv2.SIFT_create()
         FLANN_INDEX_KDTREE = 1
@@ -48,6 +49,9 @@ class pose_estimator:
             print(f'{len(pts1)} matches found after pruning')
         good_matches = sorted(good_matches, key=lambda x: x.distance)
         match_img = cv2.drawMatches(self.img1, self.kp1, self.img2, self.kp2, good_matches[:10], None, flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        # Resize image to fit within screen
+        scale = np.min([self.size_output_img[0] / match_img.shape[0], self.size_output_img[1] / match_img.shape[1]])
+        match_img = cv2.resize(match_img, (0, 0), fx=scale, fy=scale)
 
         pts1, pts2 = np.int32(pts1), np.int32(pts2)
 
